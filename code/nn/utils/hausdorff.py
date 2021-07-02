@@ -24,6 +24,6 @@ def explainHausdorf(model, dataset, segment, image, save_image = False):
     plt.imshow(raw)
     plt.show()
     
-    if save_image == True
+    if save_image == True:
         # ...or save to disk
         raw.save('raw.png')

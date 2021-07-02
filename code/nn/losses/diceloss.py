@@ -1,5 +1,9 @@
 import torch
+import torch.nn as nn
+import numpy as np
+from torch.nn import functional as F
 
+EPSILON = np.finfo(float).eps
 class DiceLoss(nn.Module):
     """
     
@@ -36,7 +40,4 @@ class DiceLoss(nn.Module):
         return loss.mean()
 
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        if self.variant == 'soft':
-            return soft_dice_loss(input, target, self.apply_softmax)
-        elif self.variant == 'none':
-            return dice_loss(input, target, self.apply_softmax)
+            return self.dice_loss(input, target, self.apply_softmax)

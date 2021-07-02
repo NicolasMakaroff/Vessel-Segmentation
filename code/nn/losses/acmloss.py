@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-
+import numpy as np
 class ACMLoss(nn.Module):
     
     def __init__(self):
@@ -15,7 +15,7 @@ class ACMLoss(nn.Module):
         delta_x = x[:,:,1:,:-2]**2
         delta_y = y[:,:,:-2,1:]**2
         delta_u = torch.abs(delta_x + delta_y)
-
+        eps = np.finfo(float).eps
         lenth = torch.mean(torch.sqrt(delta_u + eps)) # equ.(11) in the paper
         
         C_1 = torch.ones((256, 256))

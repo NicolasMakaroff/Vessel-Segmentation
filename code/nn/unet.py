@@ -2,10 +2,18 @@ import torch
 import torch.nn as nn
 
 import pytorch_lightning as pl
-from losses import *
-from layers import _downblock, _upblock
+#import sys
+#sys.path.append(r"C:\path\to\your\project")
+from losses.acmloss import *
+from losses.diceloss import *
+from losses.topoloss import *
+from layers.layers import _downblock, _upblock, ConvBlock
 
 class UNet(pl.LightningModule):
+    """The U-Net architecture.
+    
+    See https://arxiv.org/pdf/1505.04597.pdf 
+    """
 
     def __init__(self, num_channels: int=3, num_classes: int=2, antialias=False,
                  antialias_down_only=True):
@@ -50,7 +58,7 @@ class UNet(pl.LightningModule):
             nn.Conv2d(64, num_classes, kernel_size=1, padding=0)
         )
 
-    def forward(self, x: Tensor):
+    def forward(self, x: torch.Tensor):
         x1 = self.in_conv(x)  # 64 * 1. * 1. ie 224
         x2 = self.down1(x1)  # 128 * 1/2 * 1/2
         x3 = self.down2(x2)  # 256 * 1/4 * 1/4
@@ -72,8 +80,8 @@ class UNet(pl.LightningModule):
 
         x, y_true = batch
         y_pred = self(x)
-        loss = acm_loss(y_pred, y_true)
-        loss_info = dsc_loss(y_pred,y_true)
+        loss = ACMLoss(y_pred, y_true)
+        loss_info = DiceLoss(y_pred,y_true)
         logs={"train_loss": loss}
         batch_dictionary={
             #REQUIRED: It is required for us to return "loss"
@@ -89,7 +97,7 @@ class UNet(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
-        val_loss = acm_loss(y_hat, y)
+        val_loss = ACMLoss(y_hat, y)
         self.log('val_loss', val_loss, prog_bar=True, on_step=False, on_epoch=True)
         return val_loss
 
