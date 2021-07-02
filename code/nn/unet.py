@@ -1,13 +1,13 @@
+import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 
-import pytorch_lightning as pl
-#import sys
-#sys.path.append(r"C:\path\to\your\project")
+from layers.layers import ConvBlock, _downblock, _upblock
+
 from losses.acmloss import *
 from losses.diceloss import *
 from losses.topoloss import *
-from layers.layers import _downblock, _upblock, ConvBlock
+
 
 class UNet(pl.LightningModule):
     """The U-Net architecture.
