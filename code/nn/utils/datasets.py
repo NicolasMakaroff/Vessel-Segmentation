@@ -2,6 +2,7 @@ import glob
 import torch
 import numpy as np
 import pandas as pd
+import os
 
 import cv2
 try : 
@@ -12,6 +13,61 @@ import imageio
 from torch.utils.data import Dataset
 from torchvision.datasets import VisionDataset
 import albumentations.augmentations.functional as F
+
+from albumentations import Compose, Resize, RandomSizedCrop
+from albumentations import ElasticTransform, RandomScale, RandomGamma
+from albumentations import OneOf, Rotate, GaussianBlur, CLAHE, Lambda
+from albumentations import VerticalFlip, HorizontalFlip, Resize, Normalize
+from albumentations.pytorch import ToTensorV2 as ToTensor
+
+import json
+
+## Define the data augmentation pipeline
+
+MAX_SIZE = 512
+
+def _make_train_transform(mean=0, std=1):
+    _train = Compose([
+        HorizontalFlip(),
+        VerticalFlip(),
+        Rotate(90, p=.5, border_mode=cv2.BORDER_CONSTANT, value=0),
+        OneOf([
+            RandomSizedCrop((MAX_SIZE, MAX_SIZE), 400, 400, p=.8),
+            Resize(400, 400, p=.2),
+        ], p=1),
+        # ElasticTransform(sigma=10, border_mode=cv2.BORDER_CONSTANT, value=0, p=.1),
+        GaussianBlur(blur_limit=3, p=.2),
+        CLAHE(always_apply=True),
+        Normalize(mean, std, always_apply=True),
+        ToTensor(always_apply=True)
+    ])
+    return _train
+
+
+def get_transforms():
+
+    mean=[0.43008124828338623,
+            0.1420290619134903,
+            0.054625432938337326],
+    std=[0.3244638442993164,
+            0.11674251407384872,
+            0.04332775995135307]
+
+    train_transform = _make_train_transform(
+        mean=mean,
+        std=std
+        )
+
+    val_transform = Compose([
+        Resize(400, 400),
+        CLAHE(always_apply=True),
+        Normalize(mean=mean,
+                std=std),
+        ToTensor(),
+    ])
+
+    return train_transform, val_transform    
+
 
 class DriveDataset(VisionDataset):
     """DRIVE vessel segmentation dataset.

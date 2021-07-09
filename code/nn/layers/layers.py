@@ -1,10 +1,18 @@
 import torch
 import torch.nn as nn
+from torch import Tensor
+import torch.nn.functional as F
+import numpy as np
+
+from torchvision.ops import DeformConv2d
+from .antialiased_cnns import Downsample, get_pad_layer
+
 
 class _downblock(nn.Module):
 
-    def __init__(self, in_channels, out_channels, n_convs=2, antialias=False):
+    def __init__(self, in_channels, out_channels, n_convs=2, antialias=False, dense=False):
         super().__init__()
+        self.dense = dense
         layers = [
             ConvBlock(in_channels, out_channels)
         ] + [
@@ -23,6 +31,8 @@ class _downblock(nn.Module):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = self.mp(input)
         x = self.conv(x)
+        if self.dense:
+            x = torch.cat([input,x],1)
         return x
 
 
@@ -63,15 +73,6 @@ class _upblock(nn.Module):
         z = self.conv(z)
         out = self.upconv(z)  # deconvolve
         return out
-
-import torch
-from torch import nn, Tensor
-import torch.nn.functional as F
-import numpy as np
-
-from torchvision.ops import DeformConv2d
-from .antialiased_cnns import Downsample, get_pad_layer
-
 
 class MaxBlurPool2d(nn.Module):
     """Implementation of Zhang et al [2019]

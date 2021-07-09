@@ -3,6 +3,8 @@ import torch.nn as nn
 import numpy as np
 from torch.nn import functional as F
 
+import matplotlib.pyplot as plt
+
 EPSILON = np.finfo(float).eps
 class DiceLoss(nn.Module):
     """
@@ -18,7 +20,7 @@ class DiceLoss(nn.Module):
         self.apply_softmax = apply_softmax
         self.variant = str(variant).lower()
     
-    def dice_loss(input: torch.Tensor, target: torch.Tensor, softmax=True, smooth=EPSILON) -> torch.Tensor:
+    def dice_loss(self, input: torch.Tensor, target: torch.Tensor, softmax=True, smooth=EPSILON) -> torch.Tensor:
         """Regular Dice loss.
 
         Parameters
@@ -30,7 +32,7 @@ class DiceLoss(nn.Module):
         softmax: bool
         Whether to apply `F.softmax` to input to get class probabilities.
         """
-        target = F.one_hot(target).permute(0, 3, 1, 2)
+        target = F.one_hot(target.to(torch.int64)).permute(0, 3, 1, 2)
         dims = (1, 2, 3)  # sum over C, H, W
         if softmax:
             input = F.softmax(input, dim=1)

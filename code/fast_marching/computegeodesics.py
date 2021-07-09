@@ -1,4 +1,5 @@
 import numpy as np
+from utils import imageplot
 
 def grad(f):
     """
@@ -57,3 +58,45 @@ def geodesicPath(tau,x0,x1,G):
             break
     gamma.append( xtgt )
     return gamma
+
+if __name__ == '__main__':
+    from imageio import imread
+    from utils import perform_blurring, imageplot
+    import cv2
+    import matplotlib.pyplot as plt
+    
+    img = cv2.cvtColor(cv2.imread('../../data/40_training.tif'), cv2.COLOR_BGR2RGB)
+    
+    crop = img[584-564:584, 1:565]
+
+    gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+
+    M = perform_blurring(gray,20)
+
+    f1 = M - gray
+    
+    c = np.max(f1);
+    epsilon = 1e-2;
+    W = epsilon + np.abs(f1-c)
+    D = np.load('fmm.npy')
+
+    G0 = grad(D)
+
+    n = G0.shape[0]
+
+    d = np.sqrt(np.sum(G0**2, axis=2))
+
+    U = np.zeros((n,n,2))
+    U[:,:,0] = d
+    U[:,:,1] = d
+    G = G0 / U
+    gamma = geodesicPath(.8,[250,500],140 + 1j*60,G)
+    imageplot(W) 
+    plt.set_cmap('gray')
+    x1 = 140 + 1j*60
+    x0 = [250,500]
+
+    h = plt.plot(np.imag(gamma), np.real(gamma), '.b', linewidth=2)
+    h = plt.plot(x0[1], x0[0], '.r', markersize=20)
+    h = plt.plot(np.imag(x1), np.real(x1), '.g', markersize=20)
+    plt.savefig('geod.png')

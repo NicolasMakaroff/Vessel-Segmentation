@@ -33,3 +33,9 @@ def perform_blurring(f, sigma):
     h = np.exp( -(X**2+Y**2)/(2.0*float(sigma)**2) )
     h = h/np.sum(h)
     return np.real( pylab.ifft2(pylab.fft2(f) * pylab.fft2(h)) )
+
+def make_gif(fp_in='fig_*.png', fp_out='gif_fmm.gif'):
+
+    img, *imgs = [Image.open(f) for f in sorted(glob.glob(fp_in), key=lambda x: int(x.split('_')[1][:-4]))]
+
+    img.save(fp=fp_out, format='GIF', append_images=imgs, save_all=True, duration=200, loop=0)
